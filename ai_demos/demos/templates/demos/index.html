@@ -1,0 +1,31 @@
+{% extends 'demos/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Main Page
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12" id="index">
+                <h1 class="main_title">Index of My Apps</h1>
+                <div class="col-sm-12">
+                    <div class="card-deck">
+                        <div class="card">
+                            <a href="{% url 'demos:chatbot' %}">
+                                Chatbot
+                            </a>
+                        </div>
+                        <div class="card">
+                            <a href="{% url 'demos:inputoutput' %}">
+                                Input / Output
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

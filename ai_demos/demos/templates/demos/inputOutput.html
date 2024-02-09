@@ -1,0 +1,96 @@
+{% extends 'demos/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    InputOutput Ai
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <h1 class="main_title">AI Input / Output System</h1>
+
+            <form action="{% url 'demos:inputoutput' %}" method="POST" id="inputOutputForm">
+                {% csrf_token %}
+                <div class="inputField">
+                    <h3 class="title">Input 1</h3>
+                    {{ form.msg1 }}
+                </div>
+                <div class="inputField">
+                    <h3 class="title">Input 2</h3>
+                    {{ form.msg2 }}
+                </div>
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+
+            <div class="outputBox">
+                <h3 class="title">Output</h3>
+                <div class="outputBoxField">
+                    <ul id="outputBoxRecords">
+                        <li class="aiOutputMsg">
+                            <pre></pre>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $( document ).ready(function() {
+
+        $('#inputOutputForm').on('submit', function(e) {
+            // The below prevents the original function output from views.py
+            e.preventDefault();
+
+            // Declare variables
+            var inputMsg1 = $('textarea[name="msg1"]').val();
+            var inputMsg2 = $('textarea[name="msg2"]').val();
+            var inputMsgFinal = "Write a short story only about 2 paragraphs in length for a kid aged 8 using the keywords:\n" + "1." + inputMsg1 + "2." + inputMsg2;
+            const url = $(this).attr('action');
+
+            // Clear the input fields after hitting enter
+            $('textarea[name="msg1"]').val('');
+            $('textarea[name="msg2"]').val('');
+
+            // Clear AI output box before appending new response
+            $('#outputBoxRecords').empty();
+
+            // Run a loading icon when input entered
+            $('#outputBoxRecords').append('<li class="aiOutputMsg">Generating response... Please wait...</li>')
+
+            // AJAX to get data from backend in real time
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    msg1: inputMsgFinal,
+                    csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                },
+                success: function(data) {
+                    // Printing "success" if POST request successfully went through
+                    console.log("success");
+                    // Clear output box before new response
+                    $('#outputBoxRecords').empty();
+                    // Declare variable for the output response
+                    var outputResponse = data.output;
+                    // Append AI output response to output box
+                    $('#outputBoxRecords').append('<li class="aiOutputMsg">Output: ' + '<pre>' + outputResponse + '</pre>' + '</li>');
+                },
+                error: function(xhr, error, status) {
+                    // If error occurs, alert box will pop up with details
+                    var responseData = JSON.parse(xhr.responseText);
+                    alert(xhr.responseData);
+                },
+            });
+        });
+    });
+
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'demos/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Chatbot
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <h1 class="main_title">Chatbot</h1>
+
+            <div class="nav justify-concent-center">
+                <div class="chat_box">
+                    <ul id="chat_box_records">
+                        {% for chatMsg in records %}
+                            <li class="userMsg">Me:
+                                <pre>{{ chatMsg.inputMsg }}</pre>
+                            </li>
+                            <li class="aiMsg">Chatbot:
+                                <pre>{{ chatMsg.outputMsg }}</pre>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <form action="{% url 'demos:chatbot' %}" method="POST" id="chatBotForm">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        {{ form.msg }}
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="submit">Enter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $( document ).ready(function() {
+
+        automaticChatBoxScroll();
+
+        // Submit on pressing enter on keyboard
+        var chatBotFormInput = $('#chatBotForm textarea');
+        chatBotFormInput.on('keydown', function(e) {
+            if(e.keyCode === 13) {
+                if(e.shiftKey) {
+                    this.style.height = 'auto';
+                    if(this.scrollHeight <= parseInt($(this).css("max-height"))) {
+                        this.style.height = $(this).scrollHeight + "px";
+                    } else {
+                        this.style.height = $(this).css("max-height");
+                    }
+                } else {
+                    e.preventDefault();
+                    $(this).closest('form').submit();
+                    this.style.height = 'auto';
+                }
+            }
+        });
+
+        $('#chatBotForm').on('submit', function(e) {
+            // The below prevents the original function output from views.py
+            e.preventDefault();
+
+            // Declare variables
+            var inputMsg = $('textarea[name="msg"]').val();
+            const url = $(this).attr('action');
+
+            // Append your input message into the chat box
+            $('#chat_box_records').append('<li class="userMsg">Me: ' + '<pre>' + inputMsg + '</pre>' + '</li>');
+            // Clear the input field after hitting enter
+            $('textarea[name="msg"]').val('');
+            automaticChatBoxScroll();
+
+            // AJAX to get data from backend in real time
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    msg: inputMsg,
+                    csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                },
+                success: function(data) {
+                    // Printing "success" if POST request successfully went through
+                    console.log("success");
+                    // Declare variable for the chatbot response
+                    var chatbotResponse = data.output;
+                    // Append AI response to chat box
+                    $('#chat_box_records').append('<li class="aiMsg">Chatbot: ' + '<pre>' + chatbotResponse + '</pre>' + '</li>');
+                    automaticChatBoxScroll();
+                },
+                error: function(xhr, error, status) {
+                    // If error occurs, alert box will pop up with details
+                    var responseData = JSON.parse(xhr.responseText);
+                    alert(xhr.responseData);
+                },
+            });
+        });
+    });
+
+    // Function that keeps the chat box scroll at the bottom
+    function automaticChatBoxScroll() {
+        var chatBox = $('.chat_box');
+        chatBox.scrollTop(chatBox[0].scrollHeight);
+    }
+
+</script>
+{% endblock %}
